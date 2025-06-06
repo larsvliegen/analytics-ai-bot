@@ -19,31 +19,57 @@
         <label>Einddatum:
             <input type="date" name="end" required value="{{ default_end }}">
         </label>
+        <div id="gaProperties">
+            <label>GA4 property ID:
+                <input type="text" name="ga_property" required value="{{ default_property }}">
+            </label>
+        </div>
+        <button type="button" id="addProperty">Voeg property toe</button>
         <button type="submit">Vraag inzichten</button>
     </form>
     <h2>Resultaat</h2>
     <pre id="result"></pre>
     <script>
         const form = document.getElementById('insightsForm');
+        const propertiesDiv = document.getElementById('gaProperties');
+        document.getElementById('addProperty').addEventListener('click', () => {
+            const wrapper = document.createElement('label');
+            wrapper.textContent = 'GA4 property ID:';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'ga_property';
+            wrapper.appendChild(input);
+            propertiesDiv.appendChild(wrapper);
+        });
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const start = form.elements['start'].value;
             const end = form.elements['end'].value;
-            const response = await fetch(`/insights?start=${start}&end=${end}`);
+            const params = new URLSearchParams();
+            params.append('start', start);
+            params.append('end', end);
+            document.querySelectorAll('input[name="ga_property"]').forEach(inp => {
+                if (inp.value) params.append('ga_property', inp.value);
+            });
+            const response = await fetch(`/insights?${params.toString()}`);
             const data = await response.json();
             const result = document.getElementById('result');
             if (data.error) {
                 result.textContent = 'Fout: ' + data.error;
             } else {
-                let text = `Google Analytics 4\n` +
-                           `Sessies: ${data.ga_metrics.sessions}\n` +
-                           `Bounce rate: ${data.ga_metrics.avg_bounce_rate}%\n\n` +
-                           `Facebook Ads\n` +
-                           `Impressies: ${data.fb_metrics.impressions}\n` +
-                           `Klikken: ${data.fb_metrics.clicks}\n` +
-                           `Kosten: €${data.fb_metrics.spend}\n` +
-                           `CTR: ${data.fb_metrics.ctr*100}%\n\n` +
-                           `${data.ai_insights}`;
+                let text = '';
+                for (const [pid, m] of Object.entries(data.ga_metrics)) {
+                    text += `Property ${pid}\n` +
+                            `Sessies: ${m.sessions}\n` +
+                            `Bounce rate: ${m.avg_bounce_rate}%\n\n`;
+                }
+                text += `Facebook Ads\n` +
+                        `Impressies: ${data.fb_metrics.impressions}\n` +
+                        `Klikken: ${data.fb_metrics.clicks}\n` +
+                        `Kosten: €${data.fb_metrics.spend}\n` +
+                        `CTR: ${data.fb_metrics.ctr*100}%\n\n` +
+                        `${data.ai_insights}`;
                 result.textContent = text;
             }
         });

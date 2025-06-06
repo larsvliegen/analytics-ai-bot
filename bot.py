@@ -73,6 +73,13 @@ def get_ga4_metrics(property_id: str, start_date: str, end_date: str) -> dict:
         "avg_bounce_rate": round(avg_bounce, 2),
     }
 
+# Helper om metrics voor meerdere GA4-properties op te halen
+def get_multiple_ga4_metrics(property_ids: list[str], start_date: str, end_date: str) -> dict:
+    metrics = {}
+    for pid in property_ids:
+        metrics[pid] = get_ga4_metrics(pid, start_date, end_date)
+    return metrics
+
 # ======== 3. Functie om Facebook Ads-data op te halen ========
 
 def get_fb_ads_metrics(ad_account_id: str, start_date: str, end_date: str) -> dict:
@@ -100,13 +107,19 @@ def get_fb_ads_metrics(ad_account_id: str, start_date: str, end_date: str) -> di
 # ======== 4. Functie om inzichten te genereren via GPT-4 ========
 
 def generate_insights(ga_metrics: dict, fb_metrics: dict, start_date: str, end_date: str) -> str:
+    ga_lines = []
+    for pid, metrics in ga_metrics.items():
+        ga_lines.append(
+            f"Property {pid}: sessies {metrics['sessions']}, bounce rate {metrics['avg_bounce_rate']}%"
+        )
+    ga_text = "\n".join(ga_lines)
+
     prompt = f"""
 Jij bent een ervaren digital marketing consultant.
 Periode: {start_date} t/m {end_date}
 
 Google Analytics 4
-- Sessies: {ga_metrics['sessions']}
-- Bounce rate: {ga_metrics['avg_bounce_rate']}%
+{ga_text}
 
 Facebook Ads
 - Impressies: {fb_metrics['impressions']}
@@ -114,11 +127,12 @@ Facebook Ads
 - Kosten: €{fb_metrics['spend']:.2f}
 - CTR: {fb_metrics['ctr']*100:.2f}%
 
+Geef eerst aanbevelingen op basis van Google Analytics en daarna voor Facebook Ads. Gebruik duidelijke koppen en bullet points.
 1. Wat valt op?
 2. Mogelijke oorzaken?
 3. Werkpunten voor website/SEO?
 4. Aanbevelingen voor Facebook Ads?
-5. Concrete bullet‑points per onderdeel.
+5. Concrete bullet-points per onderdeel.
 
 Schrijf in het Nederlands, gestructureerd met koppen en bullets.
 """
@@ -145,7 +159,12 @@ def index():
     today = datetime.utcnow().date()
     default_end = today.strftime("%Y-%m-%d")
     default_start = (today - timedelta(days=30)).strftime("%Y-%m-%d")
-    return render_template("index.html", default_start=default_start, default_end=default_end)
+    return render_template(
+        "index.html",
+        default_start=default_start,
+        default_end=default_end,
+        default_property=GA4_PROPERTY_ID,
+    )
 
 @app.route("/insights", methods=["GET"])
 def insights():
@@ -159,8 +178,12 @@ def insights():
     except ValueError:
         return jsonify({"error": "Datumformaat moet YYYY-MM-DD zijn."}), 400
 
+    property_ids = request.args.getlist("ga_property")
+    if not property_ids:
+        property_ids = [GA4_PROPERTY_ID]
+
     try:
-        ga_metrics = get_ga4_metrics(GA4_PROPERTY_ID, start_date, end_date)
+        ga_metrics = get_multiple_ga4_metrics(property_ids, start_date, end_date)
         fb_metrics = get_fb_ads_metrics(FB_AD_ACCOUNT_ID, start_date, end_date)
         ai_text = generate_insights(ga_metrics, fb_metrics, start_date, end_date)
     except Exception as e:

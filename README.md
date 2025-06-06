@@ -41,11 +41,12 @@ Server luistert standaard op `http://127.0.0.1:5000/`.
 
 Navigeer in je browser naar `http://127.0.0.1:5000/`. Vul een start- en
 einddatum in en klik op **Vraag inzichten** om direct het antwoord van de bot
-te zien. De belangrijkste statistieken en de gegenereerde AI-tekst worden in de
-pagina getoond.
+te zien. Je kunt meerdere GA4 property ID's toevoegen via de knop *Voeg property toe*.
+De belangrijkste statistieken en de gegenereerde AI-tekst worden in de pagina
+getoond.
 
 ## Voorbeeld‑call
 
 ```bash
-curl "http://127.0.0.1:5000/insights?start=2025-05-01&end=2025-05-31"
+curl "http://127.0.0.1:5000/insights?start=2025-05-01&end=2025-05-31&ga_property=123456789&ga_property=987654321"
 ```

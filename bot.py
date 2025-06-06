@@ -224,6 +224,31 @@ def insights():
         "ai_insights": ai_text,
     })
 
+
+@app.route("/operator", methods=["POST"])
+def operator():
+    data = request.get_json(silent=True)
+    if not data or not data.get("instruction"):
+        return jsonify({"error": "Ontbrekende 'instruction' in request body."}), 400
+
+    prompt = (
+        "Je bent een ervaren analytics specialist. "
+        "Voer de volgende opdracht uit of geef een concreet stappenplan: "
+        f"{data['instruction']}"
+    )
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=500,
+        )
+        content = response.choices[0].message.content.strip()
+    except Exception as e:
+        return jsonify({"error": f"Fout bij OpenAI-aanroep: {e}"}), 500
+
+    return jsonify({"response": content})
+
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"}), 200

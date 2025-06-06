@@ -81,7 +81,7 @@ def get_fb_ads_metrics(ad_account_id: str, start_date: str, end_date: str) -> di
         account = AdAccount(f"act_{ad_account_id}")
         params = {
             "time_range": {"since": start_date, "until": end_date},
-            "fields": "impressions,clicks,spend,ctr",
+            "fields": ["impressions", "clicks", "spend", "ctr"],
         }
         insights = account.get_insights(params=params)
         if not insights:

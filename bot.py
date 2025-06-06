@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
 
@@ -140,7 +140,10 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    today = datetime.utcnow().date()
+    default_end = today.strftime("%Y-%m-%d")
+    default_start = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+    return render_template("index.html", default_start=default_start, default_end=default_end)
 
 @app.route("/insights", methods=["GET"])
 def insights():

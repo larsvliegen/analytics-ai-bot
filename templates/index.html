@@ -14,10 +14,10 @@
     <h1>Analytics AI Bot</h1>
     <form id="insightsForm">
         <label>Startdatum:
-            <input type="date" name="start" required>
+            <input type="date" name="start" required value="{{ default_start }}">
         </label>
         <label>Einddatum:
-            <input type="date" name="end" required>
+            <input type="date" name="end" required value="{{ default_end }}">
         </label>
         <button type="submit">Vraag inzichten</button>
     </form>

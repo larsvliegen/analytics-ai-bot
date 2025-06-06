@@ -10,6 +10,8 @@ cd analytics-ai-bot
 pip install -r requirements.txt
 ```
 
+Vereist OpenAI Python SDK 1.x
+
 ## Credentials (.env)
 
 ```

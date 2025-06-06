@@ -13,7 +13,7 @@ from facebook_business.api import FacebookAdsApi
 from facebook_business.adobjects.adaccount import AdAccount
 
 # OpenAI
-import openai
+from openai import OpenAI
 
 # ======== 1. Environment variables laden ========
 
@@ -40,9 +40,11 @@ required_vars = {
 }
 missing = [k for k, v in required_vars.items() if not v]
 if missing:
-    raise RuntimeError(f"De volgende environment variables ontbreken of zijn leeg: {', '.join(missing)}")
+    raise RuntimeError(
+        f"De volgende environment variables ontbreken of zijn leeg: {', '.join(missing)}"
+    )
 
-openai.api_key = OPENAI_API_KEY
+openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 # ======== 2. Functie om GA4-data op te halen ========
 
@@ -121,7 +123,7 @@ Facebook Ads
 Schrijf in het Nederlands, gestructureerd met koppen en bullets.
 """
     try:
-        response = openai.ChatCompletion.create(
+        response = openai_client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "Je bent een deskundige marketinganalist."},

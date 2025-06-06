@@ -3,43 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <title>Analytics AI Bot</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 2em; }
-        label { display: block; margin-top: 1em; }
-        button { margin-top: 1em; }
-        pre { background: #f4f4f4; padding: 1em; }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Analytics AI Bot</h1>
-    <form id="insightsForm">
-        <label>Startdatum:
-            <input type="date" name="start" required value="{{ default_start }}">
-        </label>
-        <label>Einddatum:
-            <input type="date" name="end" required value="{{ default_end }}">
-        </label>
-        <div id="gaProperties">
-            <label>GA4 property ID:
-                <input type="text" name="ga_property" required value="{{ default_property }}">
-            </label>
-        </div>
-        <button type="button" id="addProperty">Voeg property toe</button>
-        <button type="submit">Vraag inzichten</button>
-    </form>
-    <h2>Resultaat</h2>
-    <pre id="result"></pre>
+<body class="bg-light">
+    <div class="container py-5">
+        <h1 class="mb-4">Analytics AI Bot</h1>
+        <form id="insightsForm" class="mb-4">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Startdatum
+                        <input type="date" class="form-control" name="start" required value="{{ default_start }}">
+                    </label>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Einddatum
+                        <input type="date" class="form-control" name="end" required value="{{ default_end }}">
+                    </label>
+                </div>
+            </div>
+            <div id="gaProperties" class="mb-3">
+                <div class="mb-2 input-group">
+                    <span class="input-group-text">GA4 property ID</span>
+                    <input type="text" class="form-control" name="ga_property" required value="{{ default_property }}">
+                </div>
+            </div>
+            <button type="button" id="addProperty" class="btn btn-secondary me-2">Voeg property toe</button>
+            <button type="submit" class="btn btn-primary">Vraag inzichten</button>
+        </form>
+
+        <h2 class="mb-3">Resultaat</h2>
+        <pre id="result" class="bg-white p-3 border"></pre>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const form = document.getElementById('insightsForm');
         const propertiesDiv = document.getElementById('gaProperties');
+
         document.getElementById('addProperty').addEventListener('click', () => {
-            const wrapper = document.createElement('label');
-            wrapper.textContent = 'GA4 property ID:';
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.name = 'ga_property';
-            wrapper.appendChild(input);
-            propertiesDiv.appendChild(wrapper);
+            const group = document.createElement('div');
+            group.className = 'mb-2 input-group';
+            group.innerHTML = `<span class="input-group-text">GA4 property ID</span>` +
+                `<input type="text" class="form-control" name="ga_property">`;
+            propertiesDiv.appendChild(group);
         });
 
         form.addEventListener('submit', async (e) => {
@@ -64,6 +70,9 @@
                             `Sessies: ${m.sessions}\n` +
                             `Bounce rate: ${m.avg_bounce_rate}%\n\n`;
                 }
+                text += `Totaal\n` +
+                        `Sessies: ${data.ga_summary.total_sessions}\n` +
+                        `Gem. bounce rate: ${data.ga_summary.overall_bounce_rate}%\n\n`;
                 text += `Facebook Ads\n` +
                         `Impressies: ${data.fb_metrics.impressions}\n` +
                         `Klikken: ${data.fb_metrics.clicks}\n` +

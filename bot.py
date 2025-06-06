@@ -106,12 +106,23 @@ def get_fb_ads_metrics(ad_account_id: str, start_date: str, end_date: str) -> di
 
 # ======== 4. Functie om inzichten te genereren via GPT-4 ========
 
-def generate_insights(ga_metrics: dict, fb_metrics: dict, start_date: str, end_date: str) -> str:
+def generate_insights(
+    ga_metrics: dict,
+    ga_summary: dict,
+    fb_metrics: dict,
+    start_date: str,
+    end_date: str,
+) -> str:
+    """Genereer tekstuele inzichten op basis van de opgehaalde data."""
+
     ga_lines = []
     for pid, metrics in ga_metrics.items():
         ga_lines.append(
             f"Property {pid}: sessies {metrics['sessions']}, bounce rate {metrics['avg_bounce_rate']}%"
         )
+    ga_lines.append(
+        f"Totaal: {ga_summary['total_sessions']} sessies, gemiddelde bounce rate {ga_summary['overall_bounce_rate']}%"
+    )
     ga_text = "\n".join(ga_lines)
 
     prompt = f"""
@@ -184,13 +195,31 @@ def insights():
 
     try:
         ga_metrics = get_multiple_ga4_metrics(property_ids, start_date, end_date)
+
+        total_sessions = sum(m["sessions"] for m in ga_metrics.values())
+        if total_sessions:
+            weighted = sum(
+                m["avg_bounce_rate"] * m["sessions"] for m in ga_metrics.values()
+            )
+            overall_bounce = round(weighted / total_sessions, 2)
+        else:
+            overall_bounce = 0.0
+
+        ga_summary = {
+            "total_sessions": total_sessions,
+            "overall_bounce_rate": overall_bounce,
+        }
+
         fb_metrics = get_fb_ads_metrics(FB_AD_ACCOUNT_ID, start_date, end_date)
-        ai_text = generate_insights(ga_metrics, fb_metrics, start_date, end_date)
+        ai_text = generate_insights(
+            ga_metrics, ga_summary, fb_metrics, start_date, end_date
+        )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
     return jsonify({
         "ga_metrics": ga_metrics,
+        "ga_summary": ga_summary,
         "fb_metrics": fb_metrics,
         "ai_insights": ai_text,
     })

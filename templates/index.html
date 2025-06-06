@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Analytics AI Bot</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body class="bg-light">
     <div class="container py-5">
@@ -32,13 +33,23 @@
         </form>
 
         <h2 class="mb-3">Resultaat</h2>
-        <pre id="result" class="bg-white p-3 border"></pre>
+        <div id="result" class="bg-white p-3 border"></div>
+
+        <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content p-5 text-center">
+                    <div class="spinner-border" role="status"></div>
+                    <p class="mt-3 mb-0">Inzichten worden opgehaald...</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const form = document.getElementById('insightsForm');
         const propertiesDiv = document.getElementById('gaProperties');
+        const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
 
         document.getElementById('addProperty').addEventListener('click', () => {
             const group = document.createElement('div');
@@ -50,6 +61,7 @@
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            loadingModal.show();
             const start = form.elements['start'].value;
             const end = form.elements['end'].value;
             const params = new URLSearchParams();
@@ -58,28 +70,33 @@
             document.querySelectorAll('input[name="ga_property"]').forEach(inp => {
                 if (inp.value) params.append('ga_property', inp.value);
             });
-            const response = await fetch(`/insights?${params.toString()}`);
-            const data = await response.json();
-            const result = document.getElementById('result');
-            if (data.error) {
-                result.textContent = 'Fout: ' + data.error;
-            } else {
-                let text = '';
-                for (const [pid, m] of Object.entries(data.ga_metrics)) {
-                    text += `Property ${pid}\n` +
-                            `Sessies: ${m.sessions}\n` +
-                            `Bounce rate: ${m.avg_bounce_rate}%\n\n`;
+
+            try {
+                const response = await fetch(`/insights?${params.toString()}`);
+                const data = await response.json();
+                const result = document.getElementById('result');
+                if (data.error) {
+                    result.textContent = 'Fout: ' + data.error;
+                } else {
+                    let text = '';
+                    for (const [pid, m] of Object.entries(data.ga_metrics)) {
+                        text += `### Property ${pid}\n` +
+                                `- Sessies: ${m.sessions}\n` +
+                                `- Bounce rate: ${m.avg_bounce_rate}%\n\n`;
+                    }
+                    text += `**Totaal**\n` +
+                            `- Sessies: ${data.ga_summary.total_sessions}\n` +
+                            `- Gem. bounce rate: ${data.ga_summary.overall_bounce_rate}%\n\n`;
+                    text += `### Facebook Ads\n` +
+                            `- Impressies: ${data.fb_metrics.impressions}\n` +
+                            `- Klikken: ${data.fb_metrics.clicks}\n` +
+                            `- Kosten: €${data.fb_metrics.spend}\n` +
+                            `- CTR: ${data.fb_metrics.ctr*100}%\n\n` +
+                            `${data.ai_insights}`;
+                    result.innerHTML = marked.parse(text);
                 }
-                text += `Totaal\n` +
-                        `Sessies: ${data.ga_summary.total_sessions}\n` +
-                        `Gem. bounce rate: ${data.ga_summary.overall_bounce_rate}%\n\n`;
-                text += `Facebook Ads\n` +
-                        `Impressies: ${data.fb_metrics.impressions}\n` +
-                        `Klikken: ${data.fb_metrics.clicks}\n` +
-                        `Kosten: €${data.fb_metrics.spend}\n` +
-                        `CTR: ${data.fb_metrics.ctr*100}%\n\n` +
-                        `${data.ai_insights}`;
-                result.textContent = text;
+            } finally {
+                loadingModal.hide();
             }
         });
     </script>

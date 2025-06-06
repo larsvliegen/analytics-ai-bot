@@ -35,6 +35,13 @@ python bot.py
 
 Server luistert standaard op `http://127.0.0.1:5000/`.
 
+## Webinterface
+
+Navigeer in je browser naar `http://127.0.0.1:5000/`. Vul een start- en
+einddatum in en klik op **Vraag inzichten** om direct het antwoord van de bot
+te zien. De belangrijkste statistieken en de gegenereerde AI-tekst worden in de
+pagina getoond.
+
 ## Voorbeeld‑call
 
 ```bash

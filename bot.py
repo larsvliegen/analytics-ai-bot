@@ -1,7 +1,7 @@
 import os
 import json
 from datetime import datetime
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
 
 # Google Analytics
@@ -137,6 +137,10 @@ Schrijf in het Nederlands, gestructureerd met koppen en bullets.
 # ======== 5. Flask-app ========
 
 app = Flask(__name__)
+
+@app.route("/")
+def index():
+    return render_template("index.html")
 
 @app.route("/insights", methods=["GET"])
 def insights():

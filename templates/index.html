@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Analytics AI Bot</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        label { display: block; margin-top: 1em; }
+        button { margin-top: 1em; }
+        pre { background: #f4f4f4; padding: 1em; }
+    </style>
+</head>
+<body>
+    <h1>Analytics AI Bot</h1>
+    <form id="insightsForm">
+        <label>Startdatum:
+            <input type="date" name="start" required>
+        </label>
+        <label>Einddatum:
+            <input type="date" name="end" required>
+        </label>
+        <button type="submit">Vraag inzichten</button>
+    </form>
+    <h2>Resultaat</h2>
+    <pre id="result"></pre>
+    <script>
+        const form = document.getElementById('insightsForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const start = form.elements['start'].value;
+            const end = form.elements['end'].value;
+            const response = await fetch(`/insights?start=${start}&end=${end}`);
+            const data = await response.json();
+            const result = document.getElementById('result');
+            if (data.error) {
+                result.textContent = 'Fout: ' + data.error;
+            } else {
+                let text = `Google Analytics 4\n` +
+                           `Sessies: ${data.ga_metrics.sessions}\n` +
+                           `Bounce rate: ${data.ga_metrics.avg_bounce_rate}%\n\n` +
+                           `Facebook Ads\n` +
+                           `Impressies: ${data.fb_metrics.impressions}\n` +
+                           `Klikken: ${data.fb_metrics.clicks}\n` +
+                           `Kosten: €${data.fb_metrics.spend}\n` +
+                           `CTR: ${data.fb_metrics.ctr*100}%\n\n` +
+                           `${data.ai_insights}`;
+                result.textContent = text;
+            }
+        });
+    </script>
+</body>
+</html>
